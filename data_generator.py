@@ -17,8 +17,6 @@ def	energy(s):
 def autocorrelation(ds):
     aver_M=sum(ds)/ds.size
     num_auto=int(0.1*ds.size)
-    if num_auto>500:
-        num_auto=500
     ds-=aver_M
     auto_corr=np.zeros(num_auto,np.float)
     for i in range(num_auto):

@@ -5,25 +5,43 @@ N=10
 train_ds=pd.read_hdf('train_ds.h5')
 test_ds=pd.read_hdf('test_ds.h5')
 filepath='FC_ordered.h5'
-def df_to_ds(df,shuffle=True,batch_size=32,labeled=True):
+def df_to_ds(df,shuffle=True,batch_size=32,labeled=True,repeat=True,N=10,conv=False):
     df=df.copy()
     if labeled:
         labels=df.pop('labels')
-        ds=tf.data.Dataset.from_tensor_slices(
-            (
-                tf.cast(df[[str(i)+'th element' for i in range(N*N)]].values,tf.int32),
-                tf.cast(labels.values,tf.int32)
+        if conv:
+            matrix=np.array([[[df.iloc[k][str(i+j)+'th element'] for i in range(N)] for j in range(N)] for k in range(labels.count())])
+            ds=tf.data.Dataset.from_tensor_slices(
+                (
+                    tf.cast(matrix,tf.float32),
+                    tf.cast(labels.values,tf.float32)
                 )
-        )
-    else:
-        ds=tf.data.Dataset.from_tensor_slices(
-            (
-                tf.cast(df[[str(i)+'th element' for i in range(N*N)]].values,tf.int32)
             )
-        )
+        else:
+            ds=tf.data.Dataset.from_tensor_slices(
+            (
+            tf.cast(df[[str(i)+'th element' for i in range(N*N)]].values,tf.float32),
+            tf.cast(labels.values,tf.float32)
+            )
+            )
+    else:
+        if conv:
+            matrix=np.array([[[df.iloc[k][str(i+j)+'th element'] for i in range(N)] for j in range(N)] for k in range(labels.count())])
+            ds=tf.data.Dataset.from_tensor_slices(
+            (
+                tf,cast(matrix,tf.int32)
+            )
+            )
+        else:
+            ds=tf.data.Dataset.from_tensor_slices(
+            (
+            tf.cast(df[[str(i)+'th element' for i in range(N*N)]].values,tf.int32)
+            )
+            )
     if shuffle:
         ds=ds.shuffle(buffer_size=len(df))
-    ds=ds.batch(batch_size).repeat()
+    if repeat:
+        ds=ds.batch(batch_size).repeat()
     return ds
 if __name__=='__main__':
     train_ds=df_to_ds(train_ds,batch_size=16)
